@@ -2,6 +2,8 @@
 
 `model-cli` is a command line agent that interacts with different AI model providers (OpenAI, Gemini, xAI, Anthropic) to perform coding tasks. The tool sends your prompt to the chosen model which responds with JSON instructions such as shell commands or file edits. `model-cli` executes these instructions and loops until the model signals completion.
 
+During execution the CLI prints each step, showing the model response and any shell commands or file writes so you can follow along with what is happening.
+
 ## Usage
 
 ```bash

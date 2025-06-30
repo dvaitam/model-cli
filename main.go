@@ -40,6 +40,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	fmt.Printf("Starting task with provider=%s model=%s\n", *provider, *model)
+
 	systemPrompt := `You are a coding agent that generates JSON instructions. For each step respond with JSON array of operations. Available operations:\n{"shell": "<command>"} to run shell commands, {"edit": {"path": "<file>", "content": "<text>"}} to write files, or {"done": true} when finished.`
 
 	convo := []Message{
@@ -48,11 +50,15 @@ func main() {
 	}
 
 	for i := 0; i < 20; i++ {
+		fmt.Printf("\n--- Step %d ---\n", i+1)
+		fmt.Println("Calling model...")
 		resp, err := callProvider(*provider, *model, convo)
 		if err != nil {
 			fmt.Println("error calling provider:", err)
 			return
 		}
+
+		fmt.Println("Model response:", resp)
 
 		ops, err := parseOps(resp)
 		if err != nil {
@@ -65,7 +71,9 @@ func main() {
 			return
 		}
 
+		fmt.Println("Executing operations...")
 		result := executeOps(ops)
+		fmt.Print(result)
 
 		convo = append(convo, Message{Role: "assistant", Content: resp})
 		convo = append(convo, Message{Role: "user", Content: result})
@@ -84,6 +92,7 @@ func executeOps(ops []Operation) string {
 	var out string
 	for _, op := range ops {
 		if op.Shell != "" {
+			fmt.Printf("Running command: %s\n", op.Shell)
 			cmd := exec.Command("bash", "-c", op.Shell)
 			b, err := cmd.CombinedOutput()
 			if err != nil {
@@ -93,6 +102,7 @@ func executeOps(ops []Operation) string {
 			}
 		}
 		if op.Edit != nil {
+			fmt.Printf("Writing file: %s\n", op.Edit.Path)
 			ioutil.WriteFile(op.Edit.Path, []byte(op.Edit.Content), 0644)
 			out += fmt.Sprintf("edited %s\n", op.Edit.Path)
 		}
